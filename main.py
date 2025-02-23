@@ -27,8 +27,12 @@ output
 
 if __name__ == '__main__':
 
-    # Load Input data
+    # INPUTS:
     file_name = 'Data'
+    
+    print("###################################################################")
+    print("Running the model:")
+    print("###################################################################")
     
     # run the model
     model = RecommendationSystem()
@@ -39,6 +43,10 @@ if __name__ == '__main__':
     model.predict_missing_ratings()
     
     # examples of recommendations for users id. k_films is a number of films for recommendation.
+    
+    print("###################################################################")
+    print("Examples of recommendations, for differenrs users:")
+    print("###################################################################")
     model.recommendation(1,k_films = 5)
     model.recommendation(30,k_films = 5)
     model.recommendation(45,k_films = 5)

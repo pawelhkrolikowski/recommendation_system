@@ -10,18 +10,43 @@ import pandas as pd
 import os
 
 def square(m):
+    """
+    Inputs:
+    ------
+        m - numpy array
+    Outputs:
+    ------
+        bool - True if matrix is squared matrix
+    
+    """
+
     return m.shape[0] == m.shape[1]
 
+
 def same_size(m,n,axis = 1):
+    """
+    Inputs:
+    ------
+        m - numpy array
+        n - numpy array
+        axis - 0 or 1
+    Outputs:
+    ------
+        bool - True if m and n have the same size along provided axis
+    
+    """
+    
     if axis == 1 or axis == 0:
         return m.shape[axis] == n.shape[axis]
     else:
-        "Provide correct axis value: 0 or 1 !!! "
+        "Error same_size(): Provide correct axis value: 0 or 1 !!! "
         return False
+
     
 def predict_ratings_for_movie(ith_movie, user_user_cosine_sim, all_user_avg_ratings):
     """
     Inputs:
+    ------
         ith_movie:  
             numpy column - consists all ratings for ith movie - n users size
         user_user_cosine_sim:
@@ -30,39 +55,18 @@ def predict_ratings_for_movie(ith_movie, user_user_cosine_sim, all_user_avg_rati
             numpy column : average rating for each user - n users size
         
     Outputs:
+    ------
         numpy column, n users size. 
         Predicted ratings of ith movie from each user, based on positive similarity with others users.
     
     Comment:
+    ------
         it is column-wise vectorization for predicting x-user rating for ith movie
         it is for better performance
     """
     
-    """
-    
-    Parameters
-    ----------
-    df_table : TYPE
-        pandas df .
-    index : TYPE, optional
-        DESCRIPTION. The default is "feature_name_row".
-    column : TYPE, optional
-        DESCRIPTION. The default is "feature_name_column".
-    value : TYPE, optional
-        DESCRIPTION. The default is "feature_name_value".
-
-    Returns
-    -------
-    TYPE
-        DESCRIPTION.
-    TYPE
-        DESCRIPTION.
-    TYPE
-        DESCRIPTION.
-
-    """
-    
-
+ 
+    # check if all shapes are correct
     if same_size(ith_movie,user_user_cosine_sim,axis = 0) and same_size(ith_movie,all_user_avg_ratings,axis = 0) and same_size(user_user_cosine_sim,user_user_cosine_sim.T):
     
         # get user's indexes, who rated ith movie
@@ -89,40 +93,42 @@ def predict_ratings_for_movie(ith_movie, user_user_cosine_sim, all_user_avg_rati
         return predicted_rating_raw
         
     else:
-        print("Please check if provided arrays are with correct shapes:")
+        print("Error predict_ratings_for_movie(): Please check if provided arrays are with correct shapes:")
         print(ith_movie.shape)
         print(user_user_cosine_sim.shape)
         print(all_user_avg_ratings.shape)
         
         return ith_movie
     
-    
-    
+      
 def create_pivot_numpy(df_table, index = "feature_name_row", column = "feature_name_column", value = "feature_name_value"):
     """
     
-    The function assumes there is no duplicates for [row, column] in pandas df_table.
-    It means we dont need aggregation function.
-    
-    Parameters
-    ----------
-    df_table : TYPE
-        pandas df .
-    index : TYPE, optional
-        DESCRIPTION. The default is "feature_name_row".
-    column : TYPE, optional
-        DESCRIPTION. The default is "feature_name_column".
-    value : TYPE, optional
-        DESCRIPTION. The default is "feature_name_value".
-
-    Returns
-    -------
-    TYPE
-        DESCRIPTION.
-    TYPE
-        DESCRIPTION.
-    TYPE
-        DESCRIPTION.
+    Inputs:
+    ------
+        df_table:  
+            pandas dataframe with columns : [feature_name_row,feature_name_column,feature_name_value, [other_columns]. 
+        index:
+            string - name of the column, which unique values will be corresponds to row index in pivot numpy array
+        column:
+            string - name of the column, which unique values will be corresponds to column index in pivot numpy array
+        value:
+            string - name of the column, which values will values in pivot numpy array
+            
+        
+    Outputs:
+    ------
+        pivot_table_raw:
+            numpy array - pivot array of size: #{unique values from 'feature_name_row'} x #{unique values from 'feature_name_column'
+        rows_unique, cols_unique:
+            numpy array - two one dime arrays which holds unique values used to pivot creation
+        
+    Comment:
+    ------
+        The function assumes there is no duplicates for [row, column] in pandas df_table.
+        It means we dont need aggregation function.
+        If there are duplicates, maximum value is taken.
+ 
 
     """
 
@@ -134,7 +140,7 @@ def create_pivot_numpy(df_table, index = "feature_name_row", column = "feature_n
         all_combination = df_table[[index,column]].shape[0]
 
         if unique_combination != all_combination:
-            print("There are duplicates ! If user rateded one film by [r1,..,rn] then final rating is max([r1,..,rn])")
+            print("Warning create_pivot_numpy(): There are duplicates ! If user rateded one film by [r1,..,rn] then final rating is max([r1,..,rn])")
             
             # remove duplicates, select the higest rating
             df_table = df_table[[index,column,value]].groupby(by=[index, column]).max()
@@ -173,102 +179,89 @@ def create_pivot_numpy(df_table, index = "feature_name_row", column = "feature_n
         
         return np.array([0]),np.array([0]),np.array([0])
 
+
 def normalize_matrix(numpy_matrix, axis = 1, fill_na = 0):
     """
     
-    Parameters
-    ----------
-    df_table : TYPE
-        pandas df .
-    index : TYPE, optional
-        DESCRIPTION. The default is "feature_name_row".
-    column : TYPE, optional
-        DESCRIPTION. The default is "feature_name_column".
-    value : TYPE, optional
-        DESCRIPTION. The default is "feature_name_value".
+    Inputs:
+    ------
+        numpy_matrix:  
+            numpy array, can consist np.Nans
+        axis:
+            integer : direction of normalization: axis=1 means along each rows, axis=0 alonf columns 
+        fill_na:
+            float - number to fill nans 
 
-    Returns
-    -------
-    TYPE
-        DESCRIPTION.
-    TYPE
-        DESCRIPTION.
-    TYPE
-        DESCRIPTION.
+    Outputs:
+    ------
+        numpy_matrix_normalized:
+            numpy array - pivot array of size: #{unique values from 'feature_name_row'} x #{unique values from 'feature_name_column'
+        averages:
+            numpy array - with averages calulated per each row/column (axis 1/axis 0)
+        
+    Comment:
+    ------
+        The function calculates mean over NON-NaNs so for [1,np.nan,3] -> 2
+        Normalization is along rows or columns.
+
 
     """
 
     if axis == 1:
-        # normalize each row wise
-        average_per_row = np.nanmean(numpy_matrix,axis=1)
+        # get averages each row wise
+        averages = np.nanmean(numpy_matrix,axis=1)
         
         # normalize each row
-        numpy_matrix_normalized = numpy_matrix - average_per_row.reshape(numpy_matrix.shape[0],1)
+        numpy_matrix_normalized = numpy_matrix - averages.reshape(numpy_matrix.shape[0],1)
         
         # replace nans by provided value
         numpy_matrix_normalized[np.isnan(numpy_matrix_normalized)] = fill_na
         
-        return numpy_matrix_normalized, average_per_row
+        return numpy_matrix_normalized, averages
         
         
     elif axis == 0:
-        # normalize each row wise
-        average_per_row = np.nanmean(numpy_matrix,axis = 0)
+        # get averages  each column wise
+        averages = np.nanmean(numpy_matrix,axis = 0)
         
-        print(average_per_row)
-        
-        # normalize each row
-        numpy_matrix_normalized = numpy_matrix - average_per_row.reshape(1,numpy_matrix.shape[1])
+        # normalize each col
+        numpy_matrix_normalized = numpy_matrix - averages.reshape(1,numpy_matrix.shape[1])
         
         # replace nans by provided value
         numpy_matrix_normalized[np.isnan(numpy_matrix_normalized)] = fill_na
         
-        return numpy_matrix_normalized, average_per_row,
+        return numpy_matrix_normalized, averages
     else:
         print("Provide corrected value for axis : 0 or 1 !")
         
         return numpy_matrix
 
 
+def similarity_matrix(numpy_matrix, method = "cosine"):
+    
+    """
+    
+    Inputs:
+    ------
+        numpy_matrix:  
+            numpy array, rows index are objects, columns contains feature value for object
+        method:
+            string - provide method for similarity for j_th and i_th objects, so for numpy_matrix[j_th, :] and numpy_matrix[i_th, :]
+            Defaulted method is cosine similarity
 
-def similarity_matrix(matrix, method = "cosine"):
-    
-    
-    """
-    
-    Assumtions:
+    Outputs:
+    ------
+        object_cosine_sim:
+            squared numpy array of size #objects x #objects. 
+            object_cosine_sim[i_th,j-th] contains similarity between two objects.
+      
         
-    input: matrix: Object x Values
-    
-    output: matrix = [similarity between two objects based on values (two rows)] for each pair of two objects
-    
-    comment: only one method implemented, cosine similarity
-    
+    Comment:
+    ------
+        Only cosine similarity is implemented. Others for future development.
+
     """
     
-    """
-    
-    Parameters
-    ----------
-    df_table : TYPE
-        pandas df .
-    index : TYPE, optional
-        DESCRIPTION. The default is "feature_name_row".
-    column : TYPE, optional
-        DESCRIPTION. The default is "feature_name_column".
-    value : TYPE, optional
-        DESCRIPTION. The default is "feature_name_value".
-    
-    Returns
-    -------
-    TYPE
-        DESCRIPTION.
-    TYPE
-        DESCRIPTION.
-    TYPE
-        DESCRIPTION.
-    
-    """
     
     
     if method == 'cosine':
@@ -276,7 +269,7 @@ def similarity_matrix(matrix, method = "cosine"):
         # 1. UPPER part o the cosine sim formula 
         
         # dot product per USER__i x USER_j
-        similarity = np.dot(matrix, matrix.T)
+        similarity = np.dot(numpy_matrix, numpy_matrix.T)
         
         # 2. LOWER part of the cosine sim formula
         
@@ -292,43 +285,39 @@ def similarity_matrix(matrix, method = "cosine"):
         # 3. UPPER/LOWER : final User x User similarity matrix
         
         # broadcasting multiplication row by row
-        user_cosine_sim = similarity * inv_mag
+        object_cosine_sim = similarity * inv_mag
         
         # broadcasting multiplication row by row (with transposed matrix)
-        user_cosine_sim = user_cosine_sim.T * inv_mag
+        object_cosine_sim = object_cosine_sim.T * inv_mag
     
     
-        return user_cosine_sim
+        return object_cosine_sim
     
     else:
         print("There is only one method implemented - cosine similarity")
         
-        return np.dot(matrix, matrix.T)
+        return np.dot(numpy_matrix, numpy_matrix.T)
         
         
 def masking_nan(matrix_with_nan, matrix_with_prediction):
     
     """
     
-    Parameters
-    ----------
-    df_table : TYPE
-        pandas df .
-    index : TYPE, optional
-        DESCRIPTION. The default is "feature_name_row".
-    column : TYPE, optional
-        DESCRIPTION. The default is "feature_name_column".
-    value : TYPE, optional
-        DESCRIPTION. The default is "feature_name_value".
+    Inputs:
+    ------
+        matrix_with_nan:  
+            numpy array, n x k size. Contains Nans
+        matrix_with_prediction:
+            numpy array, n x k size. WITOUT Nans
+         
 
-    Returns
-    -------
-    TYPE
-        DESCRIPTION.
-    TYPE
-        DESCRIPTION.
-    TYPE
-        DESCRIPTION.
+    Outputs:
+    ------
+        matrix numpy:
+            numpy array, n x k size. 
+            Nans value from matrix_with_nan are replaced by matrix_with_prediction, element-wise. 
+            Then matrix_with_nan is returned.
+  
 
     """
     

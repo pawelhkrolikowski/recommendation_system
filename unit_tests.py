@@ -20,6 +20,23 @@ from module.functions import masking_nan
 from module.functions import square
 from module.functions import same_size
 
+
+"""
+
+Script serves for running the unit tests for all functions from module.functions
+
+input:
+    No input. The current version of the code is called to be tested against pre-defined tests.
+    
+
+    
+output
+    True if all tests passes
+    
+"""
+
+
+
 """
 
 Testing:

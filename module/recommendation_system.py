@@ -42,9 +42,12 @@ class RecommendationSystem():
         self.user_item_predicted = np.empty((1,1)) 
         self.average_user_rating = np.empty((1,1)) 
         self.predicted_user_rating = None
+        
+        print("Class RecommendationSystem initialization ...")
     
     def load_data(self, file_name = "data"):
-        print("Loading input file .... ",file_name )
+        
+        print("Loading input file ... ",file_name)
         self.raw_data = pd.read_csv(os.getcwd() + '\\input\\' + file_name + ".csv", index_col=0)
         
         
@@ -54,7 +57,8 @@ class RecommendationSystem():
         Create User-Item matrix
         
         """
-    
+        
+        print("Creating User-Item matrix ...")
         self.user_item_raw, self.movies_ids, self.users_ids  = create_pivot_numpy(self.raw_data,'user_id','movie_id','rating')
         
     def norm_user_item(self):
@@ -64,15 +68,20 @@ class RecommendationSystem():
         - fill nans with 0, as a average 0 for each user
         """
         
+        print("Normalization of User-Item matrix ...")
         self.user_item_normalized, self.average_user_rating = normalize_matrix(self.user_item_raw, axis = 1, fill_na = 0)
         
     def user_user_sim(self):
         """
         Create User-User similarities (cosine) matrix
         """
+        
+        print("Creating User-User similarity matrix ...")
         self.user_user_similarity = similarity_matrix(self.user_item_normalized, method = "cosine")
         
     def predict_missing_ratings(self):
+        
+        print("Predicting ratings for NaNs from  User-Item matrix ...")
         
         # apply column-wise the prediction of ith movie rate for all users
         args = {"movies_ids" : self.movies_ids,
@@ -123,8 +132,10 @@ class RecommendationSystem():
             recommended_movie = index_rating_predicted[:,0]
             recommended_movie_rating_prediction = index_rating_predicted[:,1]
             
-            print("Recommended movies: " , recommended_movie)
-            print("Corresponding rating: ", recommended_movie_rating_prediction)
+            print("")
+            print("Recommendations for user:", x_user_id )
+            print("Movies IDs: " , recommended_movie)
+            print("Corresponding ratings: ", recommended_movie_rating_prediction)
             
             return {"recommended movies" : recommended_movie, "predicted ratings" : recommended_movie_rating_prediction }
         
